@@ -216,3 +216,17 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project Specific
+Automate_the_Boring_Stuff_3e_onlinematerials/
+boringcoinAccounts
+censuspopdata
+client_secret_2_958552916336-3igt9eofha1h2l2s34ifprdmo37nkjvd.apps.googleusercontent.com.json
+credentials.json
+token*
+XKCD Comics/
+*.xlsx
+*.db
+*.zip
+*.txt
+*.html
