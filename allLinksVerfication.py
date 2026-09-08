@@ -2,6 +2,9 @@ import sys, logging, time, requests
 from playwright.sync_api import sync_playwright
 from urllib.parse import urlparse, urljoin
 
+# Takes a link as a command argument eg: python allLinksVerfication.py https://google.com
+# It checks all the links, <a> tag elements, and reports whether they work (200 OK), are uncertain ()
+
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s -  %(levelname)s -  %(message)s')
 # logging.disable(logging.CRITICAL)
 
