@@ -3,35 +3,35 @@ import copy, sys, logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s -  %(levelname)s -  %(message)s')
 # logging.disable(logging.CRITICAL)
 
-starting_pieces = {}
+starting_board = {}
 ROWS = "87654321"
 COLS = "abcdefgh"
 
-# Fill the starting_pieces dictionary with 
-# the - starting_pieces[position] = piece - format
+# Fill the starting_board dictionary with 
+# the - starting_board[position] = piece - format
 # of a starting chessboard
 for letter in COLS:
-    starting_pieces[letter+"2"] = "wP"
-    starting_pieces[letter+"7"] = "bP"
+    starting_board[letter+"2"] = "wP"
+    starting_board[letter+"7"] = "bP"
     match letter:
         case "a" | "h":
-            starting_pieces[letter+"1"] = "wR"
-            starting_pieces[letter+"8"] = "bR"
+            starting_board[letter+"1"] = "wR"
+            starting_board[letter+"8"] = "bR"
         case "b" | "g":
-            starting_pieces[letter+"1"] = "wN"
-            starting_pieces[letter+"8"] = "bN"
+            starting_board[letter+"1"] = "wN"
+            starting_board[letter+"8"] = "bN"
         case "c" | "f":
-            starting_pieces[letter+"1"] = "wB"
-            starting_pieces[letter+"8"] = "bB"
+            starting_board[letter+"1"] = "wB"
+            starting_board[letter+"8"] = "bB"
         case "d":
-            starting_pieces[letter+"1"] = "wQ"
-            starting_pieces[letter+"8"] = "bQ"
+            starting_board[letter+"1"] = "wQ"
+            starting_board[letter+"8"] = "bQ"
         case "e":
-            starting_pieces[letter+"1"] = "wK"
-            starting_pieces[letter+"8"] = "bK"
+            starting_board[letter+"1"] = "wK"
+            starting_board[letter+"8"] = "bK"
 
-logging.debug(starting_pieces)
-"""STARTING_PIECES is the board at the start of a chess game.
+logging.debug(starting_board)
+"""STARTING_BOARD is the board at the start of a chess game.
 It looks like this when printed
 
     a    b    c    d    e    f    g    h
@@ -63,8 +63,8 @@ It looks like this when printed
 
 
 """
-STARTING_PIECES = copy.copy(starting_pieces)
-del starting_pieces
+STARTING_BOARD = copy.copy(starting_board)
+del starting_board
 
 # The {}s are to be replaced with pieces, pipes(||) or spaces(  )
 BOARD_TEMPLATE = """
@@ -104,14 +104,14 @@ BOARD_TEMPLATE = """
 # 3. More than 8 White Pawns
 # 4. More than 1 White King or Black King
 def is_valid_chess_board(board: dict[str, str]) -> bool:
-    valid_pieces = set(STARTING_PIECES.values())
+    valid_pieces = set(STARTING_BOARD.values())
     white_piece_count = {"P": 0, "R": 0, "N": 0, "B": 0, "Q": 0, "K": 0}
     black_piece_count = {"P": 0, "R": 0, "N": 0, "B": 0, "Q": 0, "K": 0}
     total_white_piece_count = 0
     total_black_piece_count = 0
     for _, piece in board.items():
         if piece not in valid_pieces:
-            logging.debug("Invalid Chess Board: Invalid Piece - "+ piece)
+            logging.info("Invalid Chess Board: Invalid Piece - "+ piece)
             return False
         
         if piece[0] == "w":
@@ -193,7 +193,7 @@ Pieces:
   Example:
     wB - White Bishop
 Commands:
-  move e2 e4 [message] - Moves the piece at e2 to e4.
+  move e2 e4 [message] - Moves the piece at e2 to e4. You can optionally add a player message.
   remove e2 - Removes the piece at e2.
   set e2 wP - Sets square e2 to a white pawn.
   reset - Resets pieces back to their starting squares.
@@ -205,38 +205,49 @@ Commands:
 print('Interactive Chessboard')
 print('by Olamide Ifarajimi')
 
-main_board = copy.copy(STARTING_PIECES)
-message = ""
+main_board = copy.copy(STARTING_BOARD)
+player_message = ""
+computer_message = ""
+
 while True:
     print(instructions)
     print_chess_board(main_board)
-    if message:
-        print("Message:", message)
-
-    prompt = input("> ").split()
+    if player_message:
+        print("Player:", player_message)
+        player_message = ""
+    if computer_message:
+        print("Computer:", computer_message)
+        computer_message = ""
+    command = input("> ")
+    prompt = command.split()
     match prompt[0]:
         case "move":
             # Raise Exception if there are less than 2 positions written after move
             if len(prompt) < 3:
-                raise Exception("Invalid number of arguments to the move command")
+                computer_message = f"Invalid Move {command} : Missing Position argument(s)"
+                logging.error(computer_message)
+                continue
 
-            # Anything written after the positions is a message
+            # Anything written after the positions is a player message
             if len(prompt) > 3:
-                logging.info("Received message: " + message)
-                message = " ".join(prompt[3:])
+                player_message = " ".join(prompt[3:])
+                logging.info("Received player message: " + player_message)
             
             # Check that the postions are valid
             if not is_valid_position(prompt[1]):
-                logging.warning("Invalid Position: " + prompt[1])
+                computer_message = f"Invalid Move - {command} : Invalid Position - {prompt[1]}"
+                logging.warning(computer_message)
                 continue
             if not is_valid_position(prompt[2]):
-                logging.warning("Invalid Position: " + prompt[2])
+                computer_message = f"Invalid Move - {command} : Invalid Position - {prompt[2]}"
+                logging.warning(computer_message)
                 continue
             logging.info("Positions are Valid")
 
             # Check that the postions have pieces on them
             if prompt[1] not in main_board.keys():
-                logging.warning(f"Invalid Move: Position {prompt[1]} is empty")
+                computer_message = f"Invalid Move - {command} : No Pieces at Position - {prompt[1]}"
+                logging.warning(computer_message)
                 continue
             logging.info("The First Position has a piece on it")
 
@@ -245,27 +256,38 @@ while True:
 
         case "remove":
             if len(prompt) != 2:
-                raise Exception("Invalid number of arguments to the remove command")
+                computer_message = f"Invalid Remove - {command} : Invalid Number of arguments - {len(prompt)}"
+                logging.error(computer_message)
+                continue
             del main_board[prompt[1]]
         case "set":
             if len(prompt) != 3:
-                raise Exception("Invalid number of arguments to the set command")
+                computer_message = f"Invalid Set - {command} : Invalid Number of arguments - {len(prompt)}"
+                logging.error(computer_message)
+                continue
             main_board[prompt[1]] = prompt[2]
         case "reset":
             if len(prompt) != 1:
-                raise Exception("Invalid number of arguments to the reset command")
-            main_board = copy.copy(STARTING_PIECES)
+                computer_message = f"Invalid Reset - {command} : Invalid Number of arguments - {len(prompt)}"
+                logging.error(computer_message)
+                continue
+            main_board = copy.copy(STARTING_BOARD)
         case "clear":
             if len(prompt) != 1:
-                raise Exception("Invalid number of arguments to the clear command")
+                computer_message = f"Invalid Clear - {command} : Invalid Number of arguments - {len(prompt)}"
+                logging.error(computer_message)
+                continue
             main_board = {}
         case "fill":
             if len(prompt) != 2:
-                raise Exception("Invalid number of arguments to the fill command")
+                computer_message = f"Invalid Fill - {command} : Invalid Number of arguments - {len(prompt)}"
+                logging.error(computer_message)
+                continue
             for row in ROWS:
                 for col in COLS:
                     main_board[col+row] = prompt[1]
         case "quit":
             sys.exit()
         case _:
-            print("Invalid command: " + prompt[0])
+            computer_message = f"Invalid command - {prompt[0]}"
+            logging.error(computer_message)
